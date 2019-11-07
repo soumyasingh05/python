@@ -1,0 +1,630 @@
+Data Wrangling
+Welcome!
+
+By the end of this notebook, you will have learned the basics of Data Wrangling!
+
+Table of content
+
+Identify and handle missing values
+Identify missing values
+Deal with missing values
+Correct data format
+Data standardization
+Data Normalization (centering/scaling)
+Binning
+Indicator variable
+Estimated Time Needed: 30 min
+Data Wrangling is the process of converting data from the initial format to a format that may be better for analysis.
+
+What is the fuel consumption (L/100k) rate for the diesel car?
+Import data
+
+You can find the "Automobile Data Set" from the following link: https://archive.ics.uci.edu/ml/machine-learning-databases/autos/imports-85.data. We will be using this data set throughout this course.
+
+Import pandas
+[ ]:
+
+import pandas as pd
+import matplotlib.pylab as plt
+Reading the data set from the URL and adding the related headers.
+URL of the dataset
+
+This dataset was hosted on IBM Cloud object click HERE for free storage
+
+[ ]:
+
+filename = "https://s3-api.us-geo.objectstorage.softlayer.net/cf-courses-data/CognitiveClass/DA0101EN/auto.csv"
+Python list headers containing name of headers
+
+[ ]:
+
+headers = ["symboling","normalized-losses","make","fuel-type","aspiration", "num-of-doors","body-style",
+         "drive-wheels","engine-location","wheel-base", "length","width","height","curb-weight","engine-type",
+         "num-of-cylinders", "engine-size","fuel-system","bore","stroke","compression-ratio","horsepower",
+         "peak-rpm","city-mpg","highway-mpg","price"]
+[ ]:
+
+df = pd.read_csv(filename, names = headers)
+Use the method head() to display the first five rows of the dataframe.
+
+[ ]:
+
+# To see what the data set looks like, we'll use the head() method.
+df.head()
+As we can see, several question marks appeared in the dataframe; those are missing values which may hinder our further analysis.
+
+So, how do we identify all those missing values and deal with them?
+How to work with missing data?
+
+Steps for working with missing data:
+
+dentify missing data
+deal with missing data
+correct data format
+[ ]:
+
+import numpy as np
+​
+# replace "?" to NaN
+df.replace("?", np.nan, inplace = True)
+df.head(5)
+dentify_missing_values
+
+Evaluating for Missing Data
+
+The missing values are converted to Python's default. We use Python's built-in functions to identify these missing values. There are two methods to detect missing data:
+
+.isnull()
+.notnull()
+The output is a boolean value indicating whether the value that is passed into the argument is in fact missing data.
+[ ]:
+
+missing_data = df.isnull()
+missing_data.head(5)
+"True" stands for missing value, while "False" stands for not missing value.
+
+Count missing values in each column
+
+Using a for loop in Python, we can quickly figure out the number of missing values in each column. As mentioned above, "True" represents a missing value, "False" means the value is present in the dataset. In the body of the for loop the method ".value_counts()" counts the number of "True" values.
+
+[ ]:
+
+for column in missing_data.columns.values.tolist():
+    print(column)
+    print (missing_data[column].value_counts())
+    print("")    
+Based on the summary above, each column has 205 rows of data, seven columns containing missing data:
+
+"normalized-losses": 41 missing data
+"num-of-doors": 2 missing data
+"bore": 4 missing data
+"stroke" : 4 missing data
+"horsepower": 2 missing data
+"peak-rpm": 2 missing data
+"price": 4 missing data
+Deal with missing data
+
+How to deal with missing data?
+drop data
+a. drop the whole row
+b. drop the whole column
+replace data
+a. replace it by mean
+b. replace it by frequency
+c. replace it based on other functions
+Whole columns should be dropped only if most entries in the column are empty. In our dataset, none of the columns are empty enough to drop entirely. We have some freedom in choosing which method to replace data; however, some methods may seem more reasonable than others. We will apply each method to many different columns:
+
+Replace by mean:
+
+"normalized-losses": 41 missing data, replace them with mean
+"stroke": 4 missing data, replace them with mean
+"bore": 4 missing data, replace them with mean
+"horsepower": 2 missing data, replace them with mean
+"peak-rpm": 2 missing data, replace them with mean
+Replace by frequency:
+
+"num-of-doors": 2 missing data, replace them with "four".
+Reason: 84% sedans is four doors. Since four doors is most frequent, it is most likely to occur
+Drop the whole row:
+
+"price": 4 missing data, simply delete the whole row
+Reason: price is what we want to predict. Any data entry without price data cannot be used for prediction; therefore any row now without price data is not useful to us
+Calculate the average of the column 
+Replace "NaN" by mean value in "normalized-losses" column
+[ ]:
+
+df["normalized-losses"].replace(np.nan, avg_norm_loss, inplace=True)
+Calculate the mean value for 'bore' column
+[ ]:
+
+avg_bore=df['bore'].astype('float').mean(axis=0)
+print("Average of bore:", avg_bore)
+Replace NaN by mean value
+[ ]:
+
+df["bore"].replace(np.nan, avg_bore, inplace=True)
+Question #1: 
+
+According to the example above, replace NaN in "stroke" column by mean.
+[3]:
+
+# Write your code below and press Shift+Enter to execute 
+import pandas as pd
+filename = "https://s3-api.us-geo.objectstorage.softlayer.net/cf-courses-data/CognitiveClass/DA0101EN/auto.csv"
+headers = ["symboling","normalized-losses","make","fuel-type","aspiration", "num-of-doors","body-style",
+         "drive-wheels","engine-location","wheel-base", "length","width","height","curb-weight","engine-type",
+         "num-of-cylinders", "engine-size","fuel-system","bore","stroke","compression-ratio","horsepower",
+         "peak-rpm","city-mpg","highway-mpg","price"]
+df = pd.read_csv(filename, names = headers)
+# calculate the mean vaule for "stroke" column
+avg_stroke = df["stroke"].astype("float").mean(axis = 0)
+print("Average of stroke:", avg_stroke)
+​
+# replace NaN by mean value in "stroke" column
+df["stroke"].replace(np.nan, avg_stroke, inplace = True)
+---------------------------------------------------------------------------
+ValueError                                Traceback (most recent call last)
+<ipython-input-3-537bd3c0f51a> in <module>
+      8 df = pd.read_csv(filename, names = headers)
+      9 # calculate the mean vaule for "stroke" column
+---> 10 avg_stroke = df["stroke"].astype("float").mean(axis = 0)
+     11 print("Average of stroke:", avg_stroke)
+     12 
+
+~/conda/envs/python/lib/python3.6/site-packages/pandas/core/generic.py in astype(self, dtype, copy, errors, **kwargs)
+   5880             # else, only a single dtype is given
+   5881             new_data = self._data.astype(
+-> 5882                 dtype=dtype, copy=copy, errors=errors, **kwargs
+   5883             )
+   5884             return self._constructor(new_data).__finalize__(self)
+
+~/conda/envs/python/lib/python3.6/site-packages/pandas/core/internals/managers.py in astype(self, dtype, **kwargs)
+    579 
+    580     def astype(self, dtype, **kwargs):
+--> 581         return self.apply("astype", dtype=dtype, **kwargs)
+    582 
+    583     def convert(self, **kwargs):
+
+~/conda/envs/python/lib/python3.6/site-packages/pandas/core/internals/managers.py in apply(self, f, axes, filter, do_integrity_check, consolidate, **kwargs)
+    436                     kwargs[k] = obj.reindex(b_items, axis=axis, copy=align_copy)
+    437 
+--> 438             applied = getattr(b, f)(**kwargs)
+    439             result_blocks = _extend_blocks(applied, result_blocks)
+    440 
+
+~/conda/envs/python/lib/python3.6/site-packages/pandas/core/internals/blocks.py in astype(self, dtype, copy, errors, values, **kwargs)
+    557 
+    558     def astype(self, dtype, copy=False, errors="raise", values=None, **kwargs):
+--> 559         return self._astype(dtype, copy=copy, errors=errors, values=values, **kwargs)
+    560 
+    561     def _astype(self, dtype, copy=False, errors="raise", values=None, **kwargs):
+
+~/conda/envs/python/lib/python3.6/site-packages/pandas/core/internals/blocks.py in _astype(self, dtype, copy, errors, values, **kwargs)
+    641                     # _astype_nansafe works fine with 1-d only
+    642                     vals1d = values.ravel()
+--> 643                     values = astype_nansafe(vals1d, dtype, copy=True, **kwargs)
+    644 
+    645                 # TODO(extension)
+
+~/conda/envs/python/lib/python3.6/site-packages/pandas/core/dtypes/cast.py in astype_nansafe(arr, dtype, copy, skipna)
+    727     if copy or is_object_dtype(arr) or is_object_dtype(dtype):
+    728         # Explicit copy, or required since NumPy can't view from / to object.
+--> 729         return arr.astype(dtype, copy=True)
+    730 
+    731     return arr.view(dtype)
+
+ValueError: could not convert string to float: '?'
+
+Double-click <b>here</b> for the solution.
+​
+<!-- The answer is below:
+​
+# calculate the mean vaule for "stroke" column
+avg_stroke = df["stroke"].astype("float").mean(axis = 0)
+print("Average of stroke:", avg_stroke)
+​
+# replace NaN by mean value in "stroke" column
+df["stroke"].replace(np.nan, avg_stroke, inplace = True)
+​
+-->
+​
+Calculate the mean value for the 'horsepower' column:
+[ ]:
+
+avg_horsepower = df['horsepower'].astype('float').mean(axis=0)
+print("Average horsepower:", avg_horsepower)
+Replace "NaN" by mean value:
+[ ]:
+
+df['horsepower'].replace(np.nan, avg_horsepower, inplace=True)
+Calculate the mean value for 'peak-rpm' column:
+[ ]:
+
+avg_peakrpm=df['peak-rpm'].astype('float').mean(axis=0)
+print("Average peak rpm:", avg_peakrpm)
+Replace NaN by mean value:
+To see which values are present in a particular column, we can use the ".value_counts()" method:
+
+[ ]:
+
+df['num-of-doors'].value_counts()
+We can see that four doors are the most common type. We can also use the ".idxmax()" method to calculate for us the most common type automatically:
+
+[ ]:
+
+df['num-of-doors'].value_counts().idxmax()
+The replacement procedure is very similar to what we have seen previously
+
+[ ]:
+
+#replace the missing 'num-of-doors' values by the most frequent 
+df["num-of-doors"].replace(np.nan, "four", inplace=True)
+Finally, let's drop all rows that do not have price data:
+
+[ ]:
+
+# simply drop whole row with NaN in "price" column
+df.dropna(subset=["price"], axis=0, inplace=True)
+​
+# reset index, because we droped two rows
+df.reset_index(drop=True, inplace=True)
+[ ]:
+
+df.head()
+Good! Now, we obtain the dataset with no missing values.
+
+Correct data format
+
+We are almost there!
+The last step in data cleaning is checking and making sure that all data is in the correct format (int, float, text or other).
+
+In Pandas, we use
+
+.dtype() to check the data type
+
+.astype() to change the data type
+
+Lets list the data types for each column
+[ ]:
+
+df.dtypes
+As we can see above, some columns are not of the correct data type. Numerical variables should have type 'float' or 'int', and variables with strings such as categories should have type 'object'. For example, 'bore' and 'stroke' variables are numerical values that describe the engines, so we should expect them to be of the type 'float' or 'int'; however, they are shown as type 'object'. We have to convert data types into a proper format for each column using the "astype()" method.
+
+Convert data types to proper format
+Did you know? IBM Watson Studio lets you build and deploy an AI solution, using the best of open source and IBM software and giving your team a single environment to work in. Learn more here.
+[ ]:
+
+df[["bore", "stroke"]] = df[["bore", "stroke"]].astype("float")
+df[["normalized-losses"]] = df[["normalized-losses"]].astype("int")
+df[["price"]] = df[["price"]].astype("float")
+df[["peak-rpm"]] = df[["peak-rpm"]].astype("float")
+Let us list the columns after the conversion
+[ ]:
+
+df.dtypes
+Wonderful!
+
+Now, we finally obtain the cleaned dataset with no missing values and all data in its proper format.
+
+Data Standardization
+
+Data is usually collected from different agencies with different formats. (Data Standardization is also a term for a particular type of data normalization, where we subtract the mean and divide by the standard deviation)
+
+What is Standardization?
+
+Standardization is the process of transforming data into a common format which allows the researcher to make the meaningful comparison.
+
+Example
+
+Transform mpg to L/100km:
+
+In our dataset, the fuel consumption columns "city-mpg" and "highway-mpg" are represented by mpg (miles per gallon) unit. Assume we are developing an application in a country that accept the fuel consumption with L/100km standard
+
+We will need to apply data transformation to transform mpg into L/100km?
+
+The formula for unit conversion is
+
+L/100km = 235 / mpg
+
+We can do many mathematical operations directly in Pandas.
+
+[ ]:
+
+df.head()
+[ ]:
+
+# Convert mpg to L/100km by mathematical operation (235 divided by mpg)
+df['city-L/100km'] = 235/df["city-mpg"]
+​
+# check your transformed data 
+df.head()
+Question #2: 
+
+According to the example above, transform mpg to L/100km in the column of "highway-mpg", and change the name of column to "highway-L/100km".
+[2]:
+symboling	normalized-losses	make	fuel-type	aspiration	num-of-doors	body-style	drive-wheels	engine-location	wheel-base	...	engine-size	fuel-system	bore	stroke	compression-ratio	horsepower	peak-rpm	city-mpg	highway-mpg	price
+0	3	?	alfa-romero	gas	std	two	convertible	rwd	front	88.6	...	130	mpfi	3.47	2.68	9.0	111	5000	21	8.703704	13495
+1	3	?	alfa-romero	gas	std	two	convertible	rwd	front	88.6	...	130	mpfi	3.47	2.68	9.0	111	5000	21	8.703704	16500
+2	1	?	alfa-romero	gas	std	two	hatchback	rwd	front	94.5	...	152	mpfi	2.68	3.47	9.0	154	5000	19	9.038462	16500
+3	2	164	audi	gas	std	four	sedan	fwd	front	99.8	...	109	mpfi	3.19	3.40	10.0	102	5500	24	7.833333	13950
+4	2	164	audi	gas	std	four	sedan	4wd	front	99.4	...	136	mpfi	3.19	3.40	8.0	115	5500	18	10.681818	17450
+5 rows × 26 columns
+
+
+Double-click <b>here</b> for the solution.
+​
+<!-- The answer is below:
+​
+# transform mpg to L/100km by mathematical operation (235 divided by mpg)
+df["highway-mpg"] = 235/df["highway-mpg"]
+​
+# rename column name from "highway-mpg" to "highway-L/100km"
+df.rename(columns={'"highway-mpg"':'highway-L/100km'}, inplace=True)
+​
+# check your transformed data 
+df.head()
+​
+-->
+​
+[ ]:
+
+# replace (original value) by (original value)/(maximum value)
+df['length'] = df['length']/df['length'].max()
+df['width'] = df['width']/df['width'].max()
+
+<div class="alert alert-danger alertdanger" style="margin-top: 20px">
+<h1> Questiont #3: </h1>
+​
+<b>According to the example above, normalize the column "height".</b>
+</div>
+
+Double-click <b>here</b> for the solution.
+​
+<!-- The answer is below:
+​
+df['height'] = df['height']/df['height'].max() 
+# show the scaled columns
+df[["length","width","height"]].head()
+​
+-->
+Here we can see, we've normalized "length", "width" and "height" in the range of [0,1].
+
+Binning
+
+Why binning?
+Binning is a process of transforming continuous numerical variables into discrete categorical 'bins', for grouped analysis.
+
+Example:
+
+In our dataset, "horsepower" is a real valued variable ranging from 48 to 288, it has 57 unique values. What if we only care about the price difference between cars with high horsepower, medium horsepower, and little horsepower (3 types)? Can we rearrange them into three ‘bins' to simplify analysis?
+
+We will use the Pandas method 'cut' to segment the 'horsepower' column into 3 bins
+
+Example of Binning Data In Pandas
+Convert data to correct format
+
+[ ]:
+
+df["horsepower"]=df["horsepower"].astype(int, copy=True)
+Lets plot the histogram of horspower, to see what the distribution of horsepower looks like.
+
+[ ]:
+
+%matplotlib inline
+import matplotlib as plt
+from matplotlib import pyplot
+plt.pyplot.hist(df["horsepower"])
+​
+# set x/y labels and plot title
+plt.pyplot.xlabel("horsepower")
+plt.pyplot.ylabel("count")
+plt.pyplot.title("horsepower bins")
+We build a bin array, with a minimum value to a maximum value, with bandwidth calculated above. The bins will be values used to determine when one bin ends and another begins.
+
+[6]:
+
+bins = np.linspace(min(df["horsepower"]), max(df["horsepower"]), 4)
+bins
+We set group names:
+
+[ ]:
+
+group_names = ['Low', 'Medium', 'High']
+We apply the function "cut" the determine what each value of "df['horsepower']" belongs to.
+
+[ ]:
+
+df['horsepower-binned'] = pd.cut(df['horsepower'], bins, labels=group_names, include_lowest=True )
+df[['horsepower','horsepower-binned']].head(20)
+[ ]:
+
+df["horsepower-binned"].value_counts()
+Lets plot the distribution of each bin.
+
+Check the dataframe above carefully, you will find the last column provides the bins for "horsepower" with 3 categories ("Low","Medium" and "High").
+
+We successfully narrow the intervals from 57 to 3!
+
+Bins visualization
+Normally, a histogram is used to visualize the distribution of bins we created above.
+[ ]:
+
+%matplotlib inline
+import matplotlib as plt
+from matplotlib import pyplot
+​
+a = (0,1,2)
+​
+# draw historgram of attribute "horsepower" with bins = 3
+plt.pyplot.hist(df["horsepower"], bins = 3)
+​
+# set x/y labels and plot title
+plt.pyplot.xlabel("horsepower")
+plt.pyplot.ylabel("count")
+plt.pyplot.title("horsepower bins")
+The plot above shows the binning result for attribute "horsepower".
+
+Indicator variable (or dummy variable)
+
+What is an indicator variable?
+An indicator variable (or dummy variable) is a numerical variable used to label categories. They are called 'dummies' because the numbers themselves don't have inherent meaning.
+
+Why we use indicator variables?
+
+So we can use categorical variables for regression analysis in the later modules.
+
+Example
+We see the column "fuel-type" has two unique values, "gas" or "diesel". Regression doesn't understand words, only numbers. To use this attribute in regression analysis, we convert "fuel-type" into indicator variables.
+
+We will use the panda's method 'get_dummies' to assign numerical values to different categories of fuel type.
+
+[ ]:
+
+df.columns
+get indicator variables and assign it to data frame "dummy_variable_1"
+
+[ ]:
+
+dummy_variable_1 = pd.get_dummies(df["fuel-type"])
+dummy_variable_1.head()
+
+change column names for clarity 
+[ ]:
+
+dummy_variable_1.rename(columns={'fuel-type-diesel':'gas', 'fuel-type-diesel':'diesel'}, inplace=True)
+dummy_variable_1.head()
+
+We now have the value 0 to represent "gas" and 1 to represent "diesel" in the column "fuel-type". We will now insert this column back into our original dataset. 
+[ ]:
+
+# merge data frame "df" and "dummy_variable_1" 
+df = pd.concat([df, dummy_variable_1], axis=1)
+​
+# drop original column "fuel-type" from "df"
+df.drop("fuel-type", axis = 1, inplace=True)
+[ ]:
+
+df.head()
+
+The last two columns are now the indicator variable representation of the fuel-type variable. It's all 0s and 1s now.
+Question #4: 
+
+As above, create indicator variable to the column of "aspiration": "std" to 0, while "turbo" to 1.
+[9]:
+
+# Write your code below and press Shift+Enter to execute 
+# get indicator variables of aspiration and assign it to data frame "dummy_variable_2"
+dummy_variable_2 = pd.get_dummies(df['aspiration'])
+​
+# change column names for clarity
+dummy_variable_2.rename(columns={'std':'aspiration-std', 'turbo': 'aspiration-turbo'}, inplace=True)
+​
+# show first 5 instances of data frame "dummy_variable_1"
+dummy_variable_2.head()
+​
+​
+[9]:
+aspiration-std	aspiration-turbo
+0	1	0
+1	1	0
+2	1	0
+3	1	0
+4	1	0
+
+ <div class="alert alert-danger alertdanger" style="margin-top: 20px">
+<h1> Question  #5: </h1>
+​
+<b>Merge the new dataframe to the original dataframe then drop the column 'aspiration'</b>
+</div>
+[13]:
+
+# Write your code below and press Shift+Enter to execute 
+​
+dummy_variable_2 = pd.get_dummies(df['aspiration'])
+​
+# change column names for clarity
+dummy_variable_2.rename(columns={'std':'aspiration-std', 'turbo': 'aspiration-turbo'}, inplace=True)
+​
+​
+# get indicator variables of aspiration and assign it to data frame "dummy_variable_2"
+df = pd.concat([df, dummy_variable_2], axis=1)
+​
+# drop original column "aspiration" from "df"
+df.drop('aspiration', axis = 1, inplace=True)
+---------------------------------------------------------------------------
+KeyError                                  Traceback (most recent call last)
+~/conda/envs/python/lib/python3.6/site-packages/pandas/core/indexes/base.py in get_loc(self, key, method, tolerance)
+   2896             try:
+-> 2897                 return self._engine.get_loc(key)
+   2898             except KeyError:
+
+pandas/_libs/index.pyx in pandas._libs.index.IndexEngine.get_loc()
+
+pandas/_libs/index.pyx in pandas._libs.index.IndexEngine.get_loc()
+
+pandas/_libs/index.pyx in pandas._libs.index.IndexEngine._get_loc_duplicates()
+
+pandas/_libs/index.pyx in pandas._libs.index.IndexEngine._maybe_get_bool_indexer()
+
+KeyError: 'aspiration'
+
+During handling of the above exception, another exception occurred:
+
+KeyError                                  Traceback (most recent call last)
+<ipython-input-13-bff8bb8d6f2f> in <module>
+      1 # Write your code below and press Shift+Enter to execute
+      2 
+----> 3 dummy_variable_2 = pd.get_dummies(df['aspiration'])
+      4 
+      5 # change column names for clarity
+
+~/conda/envs/python/lib/python3.6/site-packages/pandas/core/frame.py in __getitem__(self, key)
+   2993             if self.columns.nlevels > 1:
+   2994                 return self._getitem_multilevel(key)
+-> 2995             indexer = self.columns.get_loc(key)
+   2996             if is_integer(indexer):
+   2997                 indexer = [indexer]
+
+~/conda/envs/python/lib/python3.6/site-packages/pandas/core/indexes/base.py in get_loc(self, key, method, tolerance)
+   2897                 return self._engine.get_loc(key)
+   2898             except KeyError:
+-> 2899                 return self._engine.get_loc(self._maybe_cast_indexer(key))
+   2900         indexer = self.get_indexer([key], method=method, tolerance=tolerance)
+   2901         if indexer.ndim > 1 or indexer.size > 1:
+
+pandas/_libs/index.pyx in pandas._libs.index.IndexEngine.get_loc()
+
+pandas/_libs/index.pyx in pandas._libs.index.IndexEngine.get_loc()
+
+pandas/_libs/index.pyx in pandas._libs.index.IndexEngine._get_loc_duplicates()
+
+pandas/_libs/index.pyx in pandas._libs.index.IndexEngine._maybe_get_bool_indexer()
+
+KeyError: 'aspiration'
+
+Double-click <b>here</b> for the solution.
+​
+<!-- The answer is below:
+​
+#merge the new dataframe to the original datafram
+df = pd.concat([df, dummy_variable_2], axis=1)
+​
+# drop original column "aspiration" from "df"
+df.drop('aspiration', axis = 1, inplace=True)
+​
+-->
+save the new csv
+
+[ ]:
+
+df.to_csv('clean_df.csv')
+Thank you for completing this notebook
+<p><a href="https://cocl.us/DA0101EN_NotbookLink_Top_bottom"><img src="https://s3-api.us-geo.objectstorage.softlayer.net/cf-courses-data/CognitiveClass/DA0101EN/Images/BottomAd.png" width="750" align="center"></a></p>
+About the Authors:
+
+This notebook was written by Mahdi Noorian PhD, Joseph Santarcangelo, Bahare Talayian, Eric Xiao, Steven Dong, Parizad, Hima Vsudevan and Fiorella Wenver and Yi Yao.
+
+Joseph Santarcangelo is a Data Scientist at IBM, and holds a PhD in Electrical Engineering. His research focused on using Machine Learning, Signal Processing, and Computer Vision to determine how videos impact human cognition. Joseph has been working for IBM since he completed his PhD.
+
+Copyright © 2018 IBM Developer Skills Network. This notebook and its source code are released under the terms of the MIT License.
+
